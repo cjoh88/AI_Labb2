@@ -17,42 +17,52 @@
   #return dist[], prev[]
 #}
 
-getNeighbors = function(node, edges) {
-  print("Entering getNeighbors")
+getNeighbors = function(node, edges, Q) {
+  #print("Entering getNeighbors")
   r = c()
   for(i in 1:nrow(edges)) {
-    if(edges[i,1] == node){
+    if(edges[i,1] == node && Q[edges[i,2]]){
       r = c(r, edges[i,2])
     }
-    else if(edges[i,2] == node){
+    else if(edges[i,2] == node && Q[edges[i,1]]){
       r = c(r, edges[i,1])
     }
   }
+  #print(r)
   return(r)
 }
 
 getMin = function(Q, dist){
-  print("Entering getMin")
+  #print("Entering getMin")
   min = Inf
   index = 0
   for(i in 1:length(Q)) {
     if(Q[i] == TRUE){
-      if(dist[i] < min){
+      if(dist[i] <= min){
         min = dist[i]
         index = i
       }
     }
   }
+  QQ <<- Q
+  DIST <<- dist
+  MIN <<- min
+  INDEX <<- index
+  #print(index)
   return(index)
 }
 
 nextStep = function(start, goal, prev) {
-  print("Entering nextStep")
+  #print("Entering nextStep")
   curr = goal
   n = prev[goal]
   #print(curr)
   #print(n)
   #print(start)
+  #Bad solution?
+  if(is.nan(n)){
+    return(0)
+  }
   #stop()
   while(n != start) {
     curr = n
@@ -62,8 +72,9 @@ nextStep = function(start, goal, prev) {
 }
 
 dijkstra = function(start, goal, edges) {
-  print("Entering dijkstra")
-  len = nrow(edges)
+  #print("Entering dijkstra")
+  #len = nrow(edges)
+  len = 40
   #create vertex set Q
   Q = rep(TRUE, len)
   #for each vertex v in graph
@@ -75,13 +86,13 @@ dijkstra = function(start, goal, edges) {
   #dist[start] <- 0
   dist[start] = 0
   #while Q not empty
-  while(is.nan(prev[goal])) {
+  while(is.nan(prev[goal]) && is.element(TRUE, Q)) {
     #u <- vertex in Q with min dist[u]
     u = getMin(Q, dist)
     #remove u from Q
     Q[u] = FALSE
     #for each neighbor v of u
-    for(v in getNeighbors(u,edges)){
+    for(v in getNeighbors(u,edges, Q)){
       #alt <- dist[u] + length(u, v)
       alt = dist[u] + 1
       #if alt < dist[v]
@@ -101,7 +112,7 @@ dijkstra = function(start, goal, edges) {
 }
 
 normalizeMatrix = function(A) {
-  print("Entering normalizeMatrix")
+  #print("Entering normalizeMatrix")
   for(i in 1:nrow(A)) {
     rowSum = sum(A[i,])
     if(rowSum != 0) {
@@ -112,14 +123,14 @@ normalizeMatrix = function(A) {
 }
 
 getEmissionMatrix = function(reading, probs) {
-  print("Entering getEmissionMatrix")
+  #print("Entering getEmissionMatrix")
   A = matrix(1,40,2)
   for(i in 1:nrow(probs)){
     if(reading > probs[i,1] - probs[i,2] && reading < probs[i,1] + probs[i,2]) {
-      A[i,1] = 6
+      A[i,1] = 9
     }
     else {
-      A[i,2] = 6
+      A[i,2] = 9
     }
   }
   A = normalizeMatrix(A)
@@ -127,7 +138,7 @@ getEmissionMatrix = function(reading, probs) {
 }
 
 getTransitionMatrix = function(edges) {
-  print("Entering getTransitionMatrix")
+  #print("Entering getTransitionMatrix")
   A = matrix(0,40,40)
   for(i in 1:nrow(edges)) {
     A[edges[i,1], edges[i,2]] = 1
@@ -139,7 +150,7 @@ getTransitionMatrix = function(edges) {
 
 #only works for 40 nodes
 getPrevState = function(moveInfo, len) {
-  print("Entering getPrevState")
+  #print("Entering getPrevState")
   #if(moveInfo$mem == NULL) {
   if(is.null(moveInfo$mem$prev)) {
     v = rep(1,len) / len
@@ -152,7 +163,7 @@ getPrevState = function(moveInfo, len) {
 
 #probs$salinity, probs$phosphate, probs$nitrogen
 makeMoves = function(moveInfo, readings, positions, edges, probs) {
-  print("Entering makeMoves")
+  #print("Entering makeMoves")
   #print(getNeighbors(19, edges))
   #stop()
   #dijkstra(1,15, edges)
@@ -199,11 +210,17 @@ makeMoves = function(moveInfo, readings, positions, edges, probs) {
   return(moveInfo)
 }
 
-#runWheresCroc(makeMoves, showCroc = T)
-for(i in 1:10) {
-  runWheresCroc(makeMoves, showCroc = F, pause = 1)
+run = function(noi){
+  #runWheresCroc(makeMoves, showCroc = T)
+  result = rep(0, noi)
+  for(i in 1:noi) {
+    #runWheresCroc(makeMoves, showCroc = T, pause = 1)
+    result[i] = runWheresCroc(makeMoves, showCroc = F, pause = 0)
+  }
+  
+  #lines(result)
+  sprintf("Avarage time to find Croc is %f turns", mean(result))
 }
-
 
 
 
