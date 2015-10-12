@@ -144,6 +144,9 @@ getTransitionMatrix = function(edges) {
     A[edges[i,1], edges[i,2]] = 1
     A[edges[i,2], edges[i,1]] = 1
   }
+  for(i in 1:nrow(A)){
+    A[i,i] = 1
+  }
   A = normalizeMatrix(A)
   return(A)
 }
@@ -213,8 +216,8 @@ makeMoves = function(moveInfo, readings, positions, edges, probs) {
   moveInfo$moves = c(nextStep(start, goal, path),0)
   
   #print(sum(newState))
-  print(which.max(newState))
-  print(max(newState))
+  #print(which.max(newState))
+  #print(max(newState))
   
   return(moveInfo)
 }
