@@ -54,6 +54,9 @@ getMin = function(Q, dist){
 
 nextStep = function(start, goal, prev) {
   #print("Entering nextStep")
+  if(start == goal) {
+    return(0)
+  }
   curr = goal
   n = prev[goal]
   #print(curr)
@@ -70,6 +73,31 @@ nextStep = function(start, goal, prev) {
   }
   return(curr)
 }
+
+# nextStep = function(start, goal, prev) {
+#   curr = goal
+#   n = prev[goal]
+#   if(is.nan(n)){
+#     return(c(0,0))
+#   }
+#   nn = prev[n]
+#   if(is.nan(nn)){
+#     return(c(0,0))  #check this
+#   }
+#   while(nn != start || n != start) {
+#     curr = n
+#     n = nn
+#     #print("n")
+#     #print(n)
+#     nn = prev[n]
+#     if(is.nan(nn)){
+#       return(c(n,0))
+#     }
+#     #print("nn")
+#     #print(nn)
+#   }
+#   return(c(n, nn))
+# }  
 
 dijkstra = function(start, goal, edges) {
   #print("Entering dijkstra")
@@ -187,6 +215,7 @@ makeMoves = function(moveInfo, readings, positions, edges, probs) {
   #nitrogen
   E3 <<- getEmissionMatrix(readings[3], probs$nitrogen)
   e <<- E1[,1] * E2[,1] * E3[,1]
+  e <<- e / sum(e)
   }
   A <<- getTransitionMatrix(edges)
 
@@ -205,15 +234,39 @@ makeMoves = function(moveInfo, readings, positions, edges, probs) {
   #e <<- e / sum(e)
   
   newState <<- t * e;
-  newState <<- newState / sum(newState)
-  moveInfo$mem$prev = newState
+  #newState <<- newState / sum(newState)
+  #moveInfo$mem$prev = newState
   #moveInfo$moves = c(0,0)
   goal = which.max(newState)
   start = positions[3]
   #print(goal)
   path <<- dijkstra(start, goal, edges)
+  nextMove = nextStep(start, goal, path)
+  nextMove2 = nextStep(nextMove, goal, path)
+  if(nextMove == 0){
+    newState[positions[3]] = 0
+    #newState <<- newState / sum(newState)
+  }
+  else if(nextMove2 == 0) {
+    newState[nextMove] = 0
+    #newState <<- newState / sum(newState)
+  }
   
-  moveInfo$moves = c(nextStep(start, goal, path),0)
+  if(!is.na(positions[1]) && positions[1] > 0){
+    newState[positions[1]] = 0
+  }
+  if(!is.na(positions[2]) && positions[2] > 0){
+    newState[positions[2]] = 0
+  }
+  
+  newState <<- newState / sum(newState)
+  
+
+  #print(nextMove2)
+  
+  #moveInfo$moves = c(nextStep(start, goal, path),0)
+  moveInfo$moves = c(nextMove, nextMove2)
+  moveInfo$mem$prev = newState
   
   #print(sum(newState))
   #print(which.max(newState))
@@ -224,12 +277,12 @@ makeMoves = function(moveInfo, readings, positions, edges, probs) {
 
 run = function(noi){
   #runWheresCroc(makeMoves, showCroc = T)
-  result = rep(0, noi)
+  result <<- rep(0, noi)
   for(i in 1:noi) {
     #sprintf("Iteration: %d", i)
     print(i)
     #runWheresCroc(makeMoves, showCroc = T, pause = 1)
-    result[i] = runWheresCroc(makeMoves, showCroc = F, pause = 0)
+    result[i] <<- runWheresCroc(makeMoves, showCroc = F, pause = 0)
   }
   
   #lines(result)
