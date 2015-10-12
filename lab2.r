@@ -163,20 +163,29 @@ getPrevState = function(moveInfo, len) {
 
 #probs$salinity, probs$phosphate, probs$nitrogen
 makeMoves = function(moveInfo, readings, positions, edges, probs) {
-  #print("Entering makeMoves")
-  #print(getNeighbors(19, edges))
-  #stop()
-  #dijkstra(1,15, edges)
-  
-  #print(moveInfo)
-  #stop()
-  A <<- getTransitionMatrix(edges)
+  #if(!is.na(positions[1])){
+  if(!is.na(positions[1]) && positions[1] < 0){
+    #A <<- abs(positions[1])
+    e <<- rep(0,40)
+    e[abs(positions[1])] = 1
+    print("tourist 1 killed")
+  }
+  else if(!is.na(positions[2]) && positions[2] < 0) {
+    #goal = abs(positions[2])
+    e <<- rep(0,40)
+    e[abs(positions[2])] = 1
+    print("tourist 2 killed")
+  }
+  else {
   #salinity
   E1 <<- getEmissionMatrix(readings[1], probs$salinity)
   #phosphate
   E2 <<- getEmissionMatrix(readings[2], probs$phosphate)
   #nitrogen
   E3 <<- getEmissionMatrix(readings[3], probs$nitrogen)
+  e <<- E1[,1] * E2[,1] * E3[,1]
+  }
+  A <<- getTransitionMatrix(edges)
 
   prevState <<- getPrevState(moveInfo, nrow(A))
   
@@ -190,22 +199,22 @@ makeMoves = function(moveInfo, readings, positions, edges, probs) {
   k <<- t
   
   #e = rep(0, nrow(A))
-  e <<- E1[,1] * E2[,1] * E3[,1]
   #e <<- e / sum(e)
   
   newState <<- t * e;
   newState <<- newState / sum(newState)
   moveInfo$mem$prev = newState
   #moveInfo$moves = c(0,0)
-  start = positions[3]
   goal = which.max(newState)
+  start = positions[3]
+  #print(goal)
   path <<- dijkstra(start, goal, edges)
   
   moveInfo$moves = c(nextStep(start, goal, path),0)
   
   #print(sum(newState))
-  #print(which.max(newState))
-  #print(max(newState))
+  print(which.max(newState))
+  print(max(newState))
   
   return(moveInfo)
 }
@@ -214,12 +223,15 @@ run = function(noi){
   #runWheresCroc(makeMoves, showCroc = T)
   result = rep(0, noi)
   for(i in 1:noi) {
+    #sprintf("Iteration: %d", i)
+    print(i)
     #runWheresCroc(makeMoves, showCroc = T, pause = 1)
     result[i] = runWheresCroc(makeMoves, showCroc = F, pause = 0)
   }
   
   #lines(result)
-  sprintf("Avarage time to find Croc is %f turns", mean(result))
+  sprintf("Avarage time: %f, Median time: %f", mean(result), median(result))
+  #sprintf("Median time to find Croc is %f turns", median(result))
 }
 
 
