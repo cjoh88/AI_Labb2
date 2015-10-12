@@ -154,11 +154,14 @@ getEmissionMatrix = function(reading, probs) {
   #print("Entering getEmissionMatrix")
   A = matrix(1,40,2)
   for(i in 1:nrow(probs)){
-    if(reading > probs[i,1] - probs[i,2] && reading < probs[i,1] + probs[i,2]) {
-      A[i,1] = 9
+    #if(reading > probs[i,1] - probs[i,2] && reading < probs[i,1] + probs[i,2]) {
+    #  A[i,1] = 19
+    #}
+    if(reading > probs[i,1] - 2*probs[i,2] && reading < probs[i,1] + 2*probs[i,2]) {
+      A[i,1] = 19
     }
     else {
-      A[i,2] = 9
+      A[i,2] = 19
     }
   }
   A = normalizeMatrix(A)
